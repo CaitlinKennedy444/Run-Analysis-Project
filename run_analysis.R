@@ -23,54 +23,49 @@ getwd()
 
 
 #Read in all data from all the files and subfolders 
-subject_test <- read.table('./test/subject_test.txt' ,header=FALSE);
-X_test <- read.table('./test/X_test.txt' ,header=FALSE);
-y_test <- read.table('./test/y_test.txt' ,header=FALSE);
-subject_train <- read.table('./train/subject_train.txt' ,header=FALSE);
-X_train <- read.table('./train/X_train.txt' ,header=FALSE);
-y_train <- read.table('./train/y_train.txt',header=FALSE);
-activity_labels <- read.table('./activity_labels.txt',header=FALSE);
+test_subject_id <- read.table('./test/subject_test.txt' ,header=FALSE);
+testdata <- read.table('./test/X_test.txt' ,header=FALSE);
+test_activity_id <- read.table('./test/y_test.txt' ,header=FALSE);
+train_subject_id <- read.table('./train/subject_train.txt' ,header=FALSE);
+traindata <- read.table('./train/X_train.txt' ,header=FALSE);
+train_activity_id <- read.table('./train/y_train.txt',header=FALSE);
+activity_labels <- read.table('./activity_labels.txt',header=FALSE,col.names=c("activity_id", "activity_name"));
 features <- read.table('./features.txt', header=FALSE);
 features <- read.table("features.txt", strip.white=TRUE, stringsAsFactors = FALSE) #Answers_what are the features in the data? 
-features
+feature_names <-features[,2]
 #All data has been read in from all files 
 
-head(subject_test)#Subject test ID
-head(X_test) #Activity measurement 
-head(y_test) #Testing activity ID
-head(subject_train)
-names(subject_train) #Subject training ID
-head(X_train) #Activity measurement 
-names(X_train)
-head(y_train) #Training Activity ID
-names(y_train)
-head(features)
-names(features)
-
 #Make column titles more appropriate to match what they really are
-colnames(activity_labels) <- c('activityID', 'activityType');
-colnames(subject_train) <- "subjecttrainID";
-colnames(X_train) <- features[,2];
-colnames(y_train) <- "TrainingActID";
-colnames(subject_test) <- "subjecttestID";
-colnames(X_test) <- features[,2];
-colnames(y_test) <- "TestingActID";
+colnames(train_subject_id) <- "subject_id";
+colnames(traindata) <- feature_names;
+colnames(train_activity_id) <- "activity_id";
+colnames(test_subject_id) <- "subject_id";
+colnames(testdata) <- feature_names;
+colnames(test_activity_id) <- "activity_id";
 
 #Bind together the columns representing training data and separately bind together the columns representing the test data;
-trainingdata <- cbind(y_train,subject_train,X_train);
-testingdata <- cbind(y_test,subject_test,X_test);
-names(trainingdata)
-names(testingdata)
+traindata <- cbind(train_subject_id,train_activity_id,traindata);
+testdata <- cbind(test_subject_id,test_activity_id,testdata);
+names(traindata)
+names(testdata)
 
 #step 1 Merge the training data and the test data (that were column bound)
 if(!file.exists("./data")){dir.create("./data")}
 install.packages("plyr")
 library(plyr)
-mergeData <- rbind.fill(trainingdata,testingdata)
+mergeData <- rbind(traindata,testdata)
 head(mergeData)
 names(mergeData)
 columnNames <- colnames(mergeData)
 head(columnNames)
+
+mean_col_idx <- grep("mean",names(mergeData),ignore.case=TRUE) 
+mean_col_names <- names(mergeData)[mean_col_idx] 
+std_col_idx <- grep("std",names(mergeData),ignore.case=TRUE) 
+std_col_names <- names(mergeData)[std_col_idx] 
+meanstddata <-mergeData[,c("subject_id","activity_id",mean_col_names,std_col_names)] 
+descrnames <- merge(activity_labels,meanstddata,by.x="activity_id",by.y="activity_id",all=TRUE)
+
 #End of step one, training and testing datasets have been merged and a column names identifier has been created for easier processing
 
 #Step 2- Data has been merged but there are a lot of extra variables that we do not need to consider in this analysis. We want
@@ -89,12 +84,12 @@ names(selecteddata)
 #Also note, the activity labels in the activities dataset are: walking2, walking_upstairs3, walking_downstairs4, sitting5, standing6 and laying
 finalData <- merge(selecteddata,activity_labels,all=TRUE)
 names(finalData) #use this to look at all column names
-unique(finalData$activityType) #use this to look at all subheadings of a variable (simple proc freq but just with variable titles)
+unique(finalData$activity_name) #use this to look at all subheadings of a variable (simple proc freq but just with variable titles)
 labels <- read.table("activity_labels.txt", stringsAsFactors = FALSE) #Same use as Uniue()
 labels #Labels is same as Unique
 #Remove the underscores from the activityTypes and create descriptive activity names to name the activities in the dataset
-finalData$activityType<-as.character(sub("_","", finalData$activityType))
-unique(finalData$activityType)
+finalData$activity_name<-as.character(sub("_","", finalData$activity_name))
+unique(finalData$activity_name)
 #update the column names after the merge
 columnNames <- colnames(finalData)
 #Step 3 is complete, descriptive activity names have been updated in the dataset
@@ -136,28 +131,16 @@ columnNames <- colnames(finalData)
 
 #Step 5- From the dataset in step 4, create a second, independent tidy data set with the average of each variable for each 
 #activity and each subject
-#make the subject IDs factors (each ID represents a person, so having a list of person 1, person 2, person 3 has no order)
-finalData$subjecttrainID <- as.factor(finalData$subjecttrainID)
-finalData$subjecttestID <- as.factor(finalData$subjecttestID)
-finalData <- data.frame(finalData)
 # use the aggregate function for where you would use proc means with a where statement in Sas (ie find the mean weight depending on diet or aggregate on time)
 #Simple examples from http://davetang.org/muse/2013/05/22/using-aggregate-and-apply-in-r/
 #Or use melt and dcast to create independent datasets, rows and mean/sum/summary functions
 #first install reshape2 package
 install.packages("reshape2")
 library(reshape2)
-finalData$subjecttrainID <- rownames(finalData)
-num5melt <- melt(finalData,id=c("subjecttrainID"),measure.vars=c("activityID"))
-tidydata <- dcast(num5melt, subjecttrainID ~ variable,mean)
+num5melt <- melt(descrnames,id=c("activity_id","activity_name","subject_id"))
+tidydata <- dcast(num5melt, activity_id + activity_name + subject_id ~ variable,mean)
 tidydata
-#Another way to find the mean of the data using tapply
-tapply(finalData$activityID, finalData$subjecttrainID,mean)
-#Antoher way
-spFinal <- split(finalData$activityID,finalData$subjecttrainID)
-spFinal
-spMeans <- lapply(spFinal,mean)
-spMeans
 #Step 5 is done
 
 #Write the tidydata to a file 
-write.table(tidydata, row.name=FALSE, file="tidydata.txt")
+write.table(tidydata, row.name=FALSE, file="./tidydata.txt")
