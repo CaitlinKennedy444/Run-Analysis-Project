@@ -19,6 +19,8 @@
 #https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip 
 
 #Set the working directory to where the file is unzipped
+getwd()
+
 
 #Read in all data from all the files and subfolders 
 subject_test <- read.table('./test/subject_test.txt' ,header=FALSE);
@@ -144,4 +146,18 @@ finalData <- data.frame(finalData)
 #first install reshape2 package
 install.packages("reshape2")
 library(reshape2)
-#Keep only the columns pertaining to mean and standard deviation
+finalData$subjecttrainID <- rownames(finalData)
+num5melt <- melt(finalData,id=c("subjecttrainID"),measure.vars=c("activityID"))
+tidydata <- dcast(num5melt, subjecttrainID ~ variable,mean)
+tidydata
+#Another way to find the mean of the data using tapply
+tapply(finalData$activityID, finalData$subjecttrainID,mean)
+#Antoher way
+spFinal <- split(finalData$activityID,finalData$subjecttrainID)
+spFinal
+spMeans <- lapply(spFinal,mean)
+spMeans
+#Step 5 is done
+
+#Write the tidydata to a file 
+write.table(tidydata, row.name=FALSE, file="tidydata.txt")
