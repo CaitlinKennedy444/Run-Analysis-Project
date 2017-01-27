@@ -15,17 +15,15 @@ independent tidy data set with the average of each variable for each activity #a
 #Read in all data from all the files and subfolders 
 #Make column titles more appropriate to match what they are really called
 #Bind together the columns representing training data and separately bind together the columns representing the test data
-#step1- Merge the training data and the test data (that were each separately column bound)
-#Step2- Data has been merged by there are a lot of extra variables that we do not need to consider in this analysis. We want to get
+#Step1- Merge the training data and the test data (that were each separately column bound)
+#Step2- Data has been merged but there are a lot of extra variables that we do not need to consider in this analysis. We want to get
 #rid of those extra variables and only keep variables pertaining to the subject ID, mean and standard deviations. Thus to do this,
-#we need to tell R which variables pertaining are useful (TRUE) and which are not useful (!FALSE)
-#grep is like the keep/drop statement in sas, the "..."function will tell R to select variables with anything similar to "mean" or "standard Deviation"
-# in the title. Then we tell R to grep only the TRUE logicals
+#we need to tell R which variables pertaining are useful (TRUE) and which are not useful (!FALSE). A better way is to use grep to pull
+#all data relevant to means and then all data relevant to standard deviations. Then put those information pieces in separate folders then merge them. In turn, these will need to be merged with the activity levels dataset which is not included in the test and train data yet. 
+#grep is like the keep/drop statement in sas, the "..."function will tell R to select variables with anything similar to "mean" or "standard Deviation" in the title. Then we tell R to grep only the TRUE logicals
 
-#Step 3- At this point only the data files relating to test and train have been merged. We called in the activity types dataset, but have 
-#not done anything with it yet. Here, lets merge the activity dataset with the other dataset we have been working with up to this point
-#(titled selected data based on the processing done in step 2)
-
+#Step 3- At this point only the data files relating to test and train have been merged. We called in the activity types dataset,but have not done anything with it yet. Here, lets merge the activity dataset with the other dataset we have been working with up #to this point (titled completedata based on the processing done in step 2)
+#Also note, the activity labels in the activities dataset are: walking2, walking_upstairs3, walking_downstairs4, sitting5, standing6 and laying#Summarize specific means and standard deviations for subject id and activity id based on the merged dataset (pulling variables of use from train and test datasets only)
 #Step 4- Clean up the column names to something more readable. CODEBOOK described here
 #Here is a summary of the changes that were made after we changed the column names
 # Acc was replaced by Accelerometer
