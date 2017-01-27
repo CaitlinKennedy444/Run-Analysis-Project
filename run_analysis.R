@@ -56,7 +56,9 @@ head(columnNames)
 
 #Step 2- Data has been merged but there are a lot of extra variables that we do not need to consider in this analysis. We want
 #to get rid of those extra variables and only keep variables pertaining to the suject ID, mean and standard deviations. Thus
-#to to this, we need to tell R which variables are useful (TRUE) and which variables are unuseful (!FALSE)
+#to to this, we need to tell R which variables are useful (TRUE) and which variables are unuseful (!FALSE). A better way is to use grep to pull
+#all the data relevant to means and all the data relevant to standard deviations. then put those information pieces in separate folders 
+#then merge them. In turn, these will need to be merged wit hthe activity levels dataset which is not included in the test and train data yet.
 #grep is like keep/drop statement in sas, the "..."function will tell R to select variables with anything similar to "mean" or "std" in the title. The ! will tell it to not select those variables
 #variableselection <- (grepl("activity..",columnNames) | grepl("subject..",columnNames) | grepl("-mean..",columnNames) & !grepl("-meanFreq..",columnNames) & !grepl("mean..-",columnNames) | grepl("-std..",columnNames) & !grepl("-std()...-",columnNames));
 #Tell R to only keep the variables pulled from GREP that are TRUE
@@ -70,16 +72,15 @@ meanincolname <- names(mergeData)[meanincolname]
 #Pull/GREP all columns relevant to std (using grep)
 stdincolname <- grep("std",names(mergeData),ignore.case=TRUE) 
 stdincolname <- names(mergeData)[stdincolname] 
-#Summarize specific means and standard deviations for subject id and activity id based on the merged dataset (pulling variables of use from train and test datasets only)
-summarydata <-mergeData[,c("subject_id","activity_id",meanincolname,stdincolname)] 
-#merge the data with the activity labels with the summary data (which up to that point only contains the training and test datasets)
-completedata <- merge(activity_labels,summarydata,by.x="activity_id",by.y="activity_id",all=TRUE)
 
 #Step 3- At this point only the data files relating to test and train have been merged. We called in the activity types dataset,
 #but have not done anything with it yet. Here, lets merge the activity dataset with the other dataset we have been working with up 
 #to this point (titled selecteddata based on the processing done in step 2)
 #Also note, the activity labels in the activities dataset are: walking2, walking_upstairs3, walking_downstairs4, sitting5, standing6 and laying
-unique(completedata$activity_name) #use this to look at all subheadings of a variable (simple proc freq but just with variable titles)
+#Summarize specific means and standard deviations for subject id and activity id based on the merged dataset (pulling variables of use from train and test datasets only)
+summarydata <-mergeData[,c("subject_id","activity_id",meanincolname,stdincolname)] 
+#merge the data with the activity labels with the summary data (which up to that point only contains the training and test datasets)
+completedata <- merge(activity_labels,summarydata,by.x="activity_id",by.y="activity_id",all=TRUE)unique(completedata$activity_name) #use this to look at all subheadings of a variable (simple proc freq but just with variable titles)
 labels <- read.table("activity_labels.txt", stringsAsFactors = FALSE) #Same use as Uniue()
 labels #Labels is same as Unique
 #Remove the underscores from the activityTypes and create descriptive activity names to name the activities in the dataset
